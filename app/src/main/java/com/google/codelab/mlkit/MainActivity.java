@@ -14,7 +14,6 @@
 
 package com.google.codelab.mlkit;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -60,6 +59,8 @@ import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
+
+import com.google.codelab.mlkit.TextGraphic;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -282,8 +283,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             for (int j = 0; j < lines.size(); j++) {
                 List<Text.Element> elements = lines.get(j).getElements();
                 for (int k = 0; k < elements.size(); k++) {
-                    Graphic textGraphic = new TextGraphic(mGraphicOverlay, elements.get(k));
-                    mGraphicOverlay.add(textGraphic);
+                   // Graphic textGraphic = new com.google.codelab.mlkit.TextGraphic(mGraphicOverlay, elements.get(k));
+                    //mGraphicOverlay.add(textGraphic);
 
                 }
             }

@@ -21,7 +21,7 @@ public class FaceContourGraphic extends GraphicOverlay.Graphic {
   private static final float BOX_STROKE_WIDTH = 5.0f;
 
   private static final int[] COLOR_CHOICES = {
-    Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.RED, Color.WHITE, Color.YELLOW
+          Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.RED, Color.WHITE, Color.YELLOW
   };
   private static int currentColorIndex = 0;
 
@@ -67,7 +67,7 @@ public class FaceContourGraphic extends GraphicOverlay.Graphic {
       return;
     }
 
-    // Draws a circle at the position of the detected face, with the face'  s track id below.
+    // Draws a circle at the position of the detected face, with the face's track id below.
     float x = translateX(face.getBoundingBox().centerX());
     float y = translateY(face.getBoundingBox().centerY());
     canvas.drawCircle(x, y, FACE_POSITION_RADIUS, facePositionPaint);
@@ -93,59 +93,59 @@ public class FaceContourGraphic extends GraphicOverlay.Graphic {
 
     if (face.getSmilingProbability() != null) {
       canvas.drawText(
-          "happiness: " + String.format("%.2f", face.getSmilingProbability()),
-          x + ID_X_OFFSET * 3,
-          y - ID_Y_OFFSET,
-          idPaint);
+              "happiness: " + String.format("%.2f", face.getSmilingProbability()),
+              x + ID_X_OFFSET * 3,
+              y - ID_Y_OFFSET,
+              idPaint);
     }
 
     if (face.getRightEyeOpenProbability() != null) {
       canvas.drawText(
-          "right eye: " + String.format("%.2f", face.getRightEyeOpenProbability()),
-          x - ID_X_OFFSET,
-          y,
-          idPaint);
+              "right eye: " + String.format("%.2f", face.getRightEyeOpenProbability()),
+              x - ID_X_OFFSET,
+              y,
+              idPaint);
     }
     if (face.getLeftEyeOpenProbability() != null) {
       canvas.drawText(
-          "left eye: " + String.format("%.2f", face.getLeftEyeOpenProbability()),
-          x + ID_X_OFFSET * 6,
-          y,
-          idPaint);
+              "left eye: " + String.format("%.2f", face.getLeftEyeOpenProbability()),
+              x + ID_X_OFFSET * 6,
+              y,
+              idPaint);
     }
     FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
     if (leftEye != null) {
       canvas.drawCircle(
-          translateX(leftEye.getPosition().x),
-          translateY(leftEye.getPosition().y),
-          FACE_POSITION_RADIUS,
-          facePositionPaint);
+              translateX(leftEye.getPosition().x),
+              translateY(leftEye.getPosition().y),
+              FACE_POSITION_RADIUS,
+              facePositionPaint);
     }
     FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
     if (rightEye != null) {
       canvas.drawCircle(
-          translateX(rightEye.getPosition().x),
-          translateY(rightEye.getPosition().y),
-          FACE_POSITION_RADIUS,
-          facePositionPaint);
+              translateX(rightEye.getPosition().x),
+              translateY(rightEye.getPosition().y),
+              FACE_POSITION_RADIUS,
+              facePositionPaint);
     }
 
     FaceLandmark leftCheek = face.getLandmark(FaceLandmark.LEFT_CHEEK);
     if (leftCheek != null) {
       canvas.drawCircle(
-          translateX(leftCheek.getPosition().x),
-          translateY(leftCheek.getPosition().y),
-          FACE_POSITION_RADIUS,
-          facePositionPaint);
+              translateX(leftCheek.getPosition().x),
+              translateY(leftCheek.getPosition().y),
+              FACE_POSITION_RADIUS,
+              facePositionPaint);
     }
     FaceLandmark rightCheek =
-        face.getLandmark(FaceLandmark.RIGHT_CHEEK);
+            face.getLandmark(FaceLandmark.RIGHT_CHEEK);
     if (rightCheek != null) {
       canvas.drawCircle(
-          translateX(rightCheek.getPosition().x),
-          translateY(rightCheek.getPosition().y),
-          FACE_POSITION_RADIUS,
-          facePositionPaint);
+              translateX(rightCheek.getPosition().x),
+              translateY(rightCheek.getPosition().y),
+              FACE_POSITION_RADIUS,
+              facePositionPaint);
     }
   }
 }
