@@ -16,15 +16,23 @@
 
 package com.google.codelab.mlkit;
 
+import static com.google.codelab.mlkit.FaceDatabaseHelper.COLUMN_FACES;
+import static com.google.codelab.mlkit.FaceDatabaseHelper.COLUMN_SIZE;
+import static com.google.codelab.mlkit.FaceDatabaseHelper.TABLE_NAME;
+import static com.google.codelab.mlkit.FaceDatabaseHelper.COLUMN_URI;
+
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.os.Build.VERSION_CODES;
 import android.os.SystemClock;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -45,9 +53,12 @@ import com.google.android.odml.image.MlImage;
 import com.google.codelab.mlkit.preference.PreferenceUtils;
 import com.google.mlkit.common.MlKitException;
 import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.face.Face;
 
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -84,6 +95,9 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
   private int frameProcessedInOneSecondInterval = 0;
   private int framesPerSecond = 0;
 
+  private FaceDatabaseHelper faceDatabaseHelper;
+
+
   // To keep the latest images and its metadata.
   @GuardedBy("this")
   private ByteBuffer latestImage;
@@ -111,9 +125,41 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
         /* delay= */ 0,
         /* period= */ 1000);
     temperatureMonitor = new TemperatureMonitor(context);
+    faceDatabaseHelper = new FaceDatabaseHelper(context);
   }
 
   // -----------------Code for processing single still image----------------------------------------
+
+
+  public String serializeFaceList(List<Face> faces) {
+    List<String> faceStrings = new ArrayList<>();
+    for (Face face : faces) {
+      faceStrings.add(face.toString());
+    }
+    return TextUtils.join(";", faceStrings); // Using ";" as a delimiter
+  }
+
+  public void insertFaceData(String faces) {
+    // Convert Face object to FaceRecord or similar
+    FaceRecord record = new FaceRecord();
+
+    // Get database writable instance
+    SQLiteDatabase db = faceDatabaseHelper.getWritableDatabase();
+
+    // Create a new map of values
+    ContentValues values = new ContentValues();
+    values.put(COLUMN_FACES, faces);
+    values.put(COLUMN_SIZE,)
+    // Insert the new row
+    long newRowId = db.insert(TABLE_NAME, null, values);
+  }
+
+  @Override
+  public void processBitmapAndSave(Bitmap bitmap, final GraphicOverlay graphicOverlay,String size){
+
+
+  }
+
   @Override
   public void processBitmap(Bitmap bitmap, final GraphicOverlay graphicOverlay) {
     long frameStartMs = SystemClock.elapsedRealtime();
@@ -375,6 +421,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
     maxDetectorMs = 0;
     minDetectorMs = Long.MAX_VALUE;
   }
+
 
   protected abstract Task<T> detectInImage(InputImage image);
 

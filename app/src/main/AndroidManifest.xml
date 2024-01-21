@@ -38,7 +38,17 @@
         </intent-filter>
     </activity>-->
 
-    <activity android:name=".ChooserActivity"
+   <!-- <activity android:name=".ChooserActivity"
+        android:configChanges="keyboardHidden|orientation|screenSize"
+        android:exported="true"
+        android:screenOrientation="portrait">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+    </activity>-->
+    <activity android:name=".StillImageActivity"
         android:configChanges="keyboardHidden|orientation|screenSize"
         android:exported="true"
         android:screenOrientation="portrait">
@@ -48,6 +58,7 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
     </activity>
+
 
     <activity
         android:name=".LivePreviewActivity"
@@ -67,11 +78,7 @@
         android:theme="@style/AppTheme">
     </activity>
 
-    <activity
-        android:name=".StillImageActivity"
-        android:exported="false"
-        android:theme="@style/AppTheme">
-    </activity>
+
     <activity
         android:name=".preference.SettingsActivity"
         android:exported="false"/>

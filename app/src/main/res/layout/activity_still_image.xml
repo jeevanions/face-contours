@@ -34,16 +34,43 @@
       android:background="#000"
       android:orientation="vertical">
 
+  <LinearLayout
+      android:id="@+id/control2"
+      android:layout_width="match_parent"
+      android:layout_height="60dp"
+      app:layout_constraintBottom_toBottomOf="parent"
+      android:background="#000"
+      android:orientation="horizontal">
     <Button
-        android:id="@+id/select_image_button"
+        android:id="@+id/open_gallery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="8dp"
+        android:textSize="8dp"
+        android:text="Open Gallery"/>
+    <Button
+        android:id="@+id/take_photo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="8dp"
+        android:textSize="8dp"
+        android:text="Take Photo"/>
+
+    <Button
+        android:id="@+id/save_contours"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_margin="12dp"
-        android:text="@string/select_image"/>
+        android:textSize="10dp"
+        android:text="Save Contours"/>
+
+  </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/control2"
+        android:id="@+id/control3"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -57,21 +84,8 @@
           android:layout_height="wrap_content"
           android:layout_gravity="center"/>
 
-      <Spinner
-          android:id="@+id/feature_selector"
-          android:layout_width="0dp"
-          android:layout_weight="1"
-          android:layout_height="wrap_content"
-          android:layout_gravity="center"/>
+
     </LinearLayout>
   </LinearLayout>
-
-  <include
-      layout="@layout/settings_style"
-      android:id="@+id/settings_button"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      app:layout_constraintRight_toRightOf="@id/root"
-      app:layout_constraintTop_toTopOf="@id/root"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

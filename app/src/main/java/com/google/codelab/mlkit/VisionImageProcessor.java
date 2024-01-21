@@ -30,6 +30,8 @@ public interface VisionImageProcessor {
   /** Processes a bitmap image. */
   void processBitmap(Bitmap bitmap, GraphicOverlay graphicOverlay);
 
+  void processBitmapAndSave(Bitmap bitmap, GraphicOverlay graphicOverlay, String size);
+
   /** Processes ByteBuffer image data, e.g. used for Camera1 live preview case. */
   void processByteBuffer(
       ByteBuffer data, FrameMetadata frameMetadata, GraphicOverlay graphicOverlay)

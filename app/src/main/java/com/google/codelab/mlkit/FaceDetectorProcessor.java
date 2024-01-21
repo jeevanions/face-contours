@@ -16,8 +16,10 @@
 
 package com.google.codelab.mlkit;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.PointF;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -31,6 +33,10 @@ import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 import com.google.mlkit.vision.face.FaceLandmark;
 
+
+import android.database.sqlite.SQLiteDatabase;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -43,6 +49,7 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
 
   public FaceDetectorProcessor(Context context) {
     super(context);
+
     FaceDetectorOptions faceDetectorOptions = PreferenceUtils.getFaceDetectorOptions(context);
     Log.v(MANUAL_TESTING_LOG, "Face detector options: " + faceDetectorOptions);
     detector = FaceDetection.getClient(faceDetectorOptions);
@@ -65,7 +72,13 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
       graphicOverlay.add(new FaceGraphic(graphicOverlay, face));
       logExtrasForTesting(face);
     }
+    String facesString = this.serializeFaceList(faces);
+    this.insertFaceData(facesString);
+
+
   }
+
+
 
   private static void logExtrasForTesting(Face face) {
     if (face != null) {
