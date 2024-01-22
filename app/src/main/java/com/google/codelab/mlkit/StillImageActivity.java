@@ -16,15 +16,24 @@
 
 package com.google.codelab.mlkit;
 
+import static com.google.codelab.mlkit.FaceDatabaseHelper.COLUMN_FACES;
+import static com.google.codelab.mlkit.FaceDatabaseHelper.COLUMN_SIZE;
+import static com.google.codelab.mlkit.FaceDatabaseHelper.COLUMN_URI;
+import static com.google.codelab.mlkit.FaceDatabaseHelper.TABLE_NAME;
 import static java.lang.Math.max;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
@@ -34,13 +43,22 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.common.annotation.KeepName;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.common.base.Strings;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.face.Face;
+import com.google.mlkit.vision.face.FaceDetection;
+import com.google.mlkit.vision.face.FaceDetector;
+import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,6 +70,7 @@ public final class StillImageActivity extends AppCompatActivity {
 
   private static final String TAG = "StillImageActivity";
   private static final String FACE_DETECTION = "Face Detection";
+  private ProgressBar progressBar;
 
   public static final String SIZE_SCREEN = "w:screen"; // Match screen width
   public static final String SIZE_1024_768 = "w:1024"; // ~1024*768 in a normal ratio
@@ -74,15 +93,30 @@ public final class StillImageActivity extends AppCompatActivity {
   private Uri imageUri;
   private int imageMaxWidth;
   private int imageMaxHeight;
-  private VisionImageProcessor imageProcessor;
 
   private Button mBtnOpenGallery, mBtnTakePhoto,mBtnSaveContours;
 
+  private FaceDetector detector;
+
+  private FaceDatabaseHelper faceDatabaseHelper;;
+
+  private void initDb()
+  {
+    if(faceDatabaseHelper != null){
+      faceDatabaseHelper.close();
+    }
+    faceDatabaseHelper = new FaceDatabaseHelper(this);
+
+  }
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
     setContentView(R.layout.activity_still_image);
+    createDetector();
+    this.initDb();
+    progressBar =  findViewById(R.id.progressBar);
+
     mBtnOpenGallery =  findViewById(R.id.open_gallery);
     mBtnTakePhoto = findViewById(R.id.take_photo);
     mBtnOpenGallery.setOnClickListener(new View.OnClickListener() {
@@ -143,23 +177,23 @@ public final class StillImageActivity extends AppCompatActivity {
   public void onResume() {
     super.onResume();
     Log.d(TAG, "onResume");
-    createImageProcessor();
+    createDetector();
     tryReloadAndDetectInImage(false,"");
   }
 
   @Override
   public void onPause() {
     super.onPause();
-    if (imageProcessor != null) {
-      imageProcessor.stop();
+    if (detector != null) {
+      detector.close();
     }
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    if (imageProcessor != null) {
-      imageProcessor.stop();
+    if (detector != null) {
+      detector.close();
     }
   }
 
@@ -281,15 +315,14 @@ public final class StillImageActivity extends AppCompatActivity {
 
       preview.setImageBitmap(resizedBitmap);
 
-      if (imageProcessor != null) {
+      if (detector != null) {
         graphicOverlay.setImageSourceInfo(
             resizedBitmap.getWidth(), resizedBitmap.getHeight(), /* isFlipped= */ false);
         if (saveRecording){
-          imageProcessor.processBitmapAndSave(resizedBitmap, graphicOverlay,selectedSize,imageUri.toString());
+          runFaceContourDetection(resizedBitmap,true);
 
         }else {
-          imageProcessor.processBitmap(resizedBitmap, graphicOverlay);
-
+          runFaceContourDetection(resizedBitmap,false);
         }
       } else {
         Log.e(TAG, "Null imageProcessor, please check adb logs for imageProcessor creation error");
@@ -297,6 +330,111 @@ public final class StillImageActivity extends AppCompatActivity {
     } catch (IOException e) {
       Log.e(TAG, "Error retrieving saved image");
       imageUri = null;
+    }
+  }
+
+
+  private void runFaceContourDetection(Bitmap bitmapImage,boolean save) {
+    InputImage image = InputImage.fromBitmap(bitmapImage, 0);
+
+
+    showProgressBar(true);
+    // Run the face contour detection on a background thread
+    AsyncTask.execute(new Runnable() {
+      @Override
+      public void run() {
+        if(detector == null) return;
+        detector.process(image)
+                .addOnSuccessListener(
+                        new OnSuccessListener<List<Face>>() {
+                          @Override
+                          public void onSuccess(List<Face> faces) {
+                            // Process the result on the main UI thread
+                            runOnUiThread(new Runnable() {
+                              @Override
+                              public void run() {
+                                processFaceContourDetectionResult(faces);
+                                hideProgressBar();
+                                saveFaceContourDetectionResult(faces);
+                              }
+                            });
+                          }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                          @Override
+                          public void onFailure(@NonNull Exception e) {
+                            // Task failed with an exception
+                            runOnUiThread(new Runnable() {
+                              @Override
+                              public void run() {
+                                e.printStackTrace();
+                                hideProgressBar();
+                              }
+                            });
+                          }
+                        });
+      }
+    });
+  }
+
+  private void showProgressBar(boolean show) {
+    progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+  }
+  private void showToast(String message) {
+    Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+  }
+
+  private void hideProgressBar(){
+    progressBar.setVisibility(View.GONE);
+  }
+
+  private void processFaceContourDetectionResult(List<Face> faces) {
+    // Task completed successfully
+    if (faces.size() == 0) {
+      showToast("No face found");
+      return;
+    }
+    graphicOverlay.clear();
+    for (int i = 0; i < faces.size(); ++i) {
+      Face face = faces.get(i);
+      FaceContourGraphic faceGraphic = new FaceContourGraphic(graphicOverlay);
+      graphicOverlay.add(faceGraphic);
+      faceGraphic.updateFace(face);
+    }
+  }
+
+  private void saveFaceContourDetectionResult(List<Face> faces) {
+    String stringFaces = serializeFaceList(faces);
+    faceDatabaseHelper.insertFaceDetection(stringFaces,SIZE_ORIGINAL,imageUri.toString());
+
+  }
+
+  public String serializeFaceList(List<Face> faces) {
+    List<String> faceStrings = new ArrayList<>();
+    for (Face face : faces) {
+      faceStrings.add(face.toString());
+    }
+    return TextUtils.join(";", faceStrings); // Using ";" as a delimiter
+  }
+
+  public void insertFaceData(String faces,String size,String imageUri) {
+    // Convert Face object to FaceRecord or similar
+    FaceRecord record = new FaceRecord();
+
+    // Get database writable instance
+
+    SQLiteDatabase db = faceDatabaseHelper.getWritableDatabase();
+
+    // Create a new map of values
+    ContentValues values = new ContentValues();
+    values.put(COLUMN_FACES, faces);
+    values.put(COLUMN_SIZE,size);
+    values.put(COLUMN_URI,imageUri);
+    // Insert the new row
+    long newRowId = db.insert(TABLE_NAME, null, values);
+    if (newRowId == -1) {
+      // Handle error
     }
   }
 
@@ -324,13 +462,18 @@ public final class StillImageActivity extends AppCompatActivity {
     return new Pair<>(targetWidth, targetHeight);
   }
 
-  private void createImageProcessor() {
-    if (imageProcessor != null) {
-      imageProcessor.stop();
+  private void createDetector() {
+    if (detector != null) {
+      detector.close();
     }
     try {
           Log.i(TAG, "Using Face Detector Processor");
-          imageProcessor = new FaceDetectorProcessor(this);
+      FaceDetectorOptions options =
+              new FaceDetectorOptions.Builder()
+                      .setPerformanceMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
+                      .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
+                      .build();
+      detector = FaceDetection.getClient(options);
 
     } catch (Exception e) {
       Log.e(TAG, "Can not create image processor: Face Detection", e);
