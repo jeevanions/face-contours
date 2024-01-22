@@ -67,17 +67,16 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
   }
 
   @Override
-  protected void onSuccess(@NonNull List<Face> faces, @NonNull GraphicOverlay graphicOverlay) {
+  protected void onSuccess(@NonNull List<Face> faces, @NonNull GraphicOverlay graphicOverlay,String size, String imageUri, boolean save) {
     for (Face face : faces) {
       graphicOverlay.add(new FaceGraphic(graphicOverlay, face));
       logExtrasForTesting(face);
     }
     String facesString = this.serializeFaceList(faces);
-    this.insertFaceData(facesString);
-
-
+    if (save) {
+      this.insertFaceData(facesString, size, imageUri);
+    }
   }
-
 
 
   private static void logExtrasForTesting(Face face) {

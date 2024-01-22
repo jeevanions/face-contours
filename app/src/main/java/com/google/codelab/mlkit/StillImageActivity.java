@@ -285,7 +285,7 @@ public final class StillImageActivity extends AppCompatActivity {
         graphicOverlay.setImageSourceInfo(
             resizedBitmap.getWidth(), resizedBitmap.getHeight(), /* isFlipped= */ false);
         if (saveRecording){
-          imageProcessor.processBitmapAndSave(resizedBitmap, graphicOverlay,selectedSize);
+          imageProcessor.processBitmapAndSave(resizedBitmap, graphicOverlay,selectedSize,imageUri.toString());
 
         }else {
           imageProcessor.processBitmap(resizedBitmap, graphicOverlay);
